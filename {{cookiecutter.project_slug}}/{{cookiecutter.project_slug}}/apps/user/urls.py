@@ -15,9 +15,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf import settings
-from django.conf.urls import include
+from django.conf.urls import include, url
 from rest_framework.documentation import include_docs_urls
 from rest_framework.routers import DefaultRouter
+from {{cookiecutter.project_slug}}.apps.user.views import FacebookLogin
 
 # External application routers
 # ie: from app.urls import router as app_router
@@ -41,44 +42,11 @@ router = OptionalSlashDefaultRouter()
 
 # Main application routes
 router.register('users', views.UserViewSet)
-router.register('permissions', views.PermissionViewSet)
-
-router.register(
-    'authentication',
-    views.TemporaryTokenDestroy,
-    base_name="authentication",
-)
 
 urlpatterns = [
-    path(
-        'authentication',
-        views.ObtainTemporaryAuthToken.as_view(),
-        name='token_api'
-    ),
-    path(
-        'users/activate',
-        views.UsersActivation.as_view(),
-        name='users_activation',
-    ),
-    path(
-        'profile',
-        views.UserViewSet.as_view({
-            'get': 'retrieve'
-        }),
-        name='profile',
-        kwargs={'pk': 'me'},
-    ),
-    # Forgot password
-    path(
-        'reset_password',
-        views.ResetPassword.as_view(),
-        name='reset_password'
-    ),
-    path(
-        'change_password',
-        views.ChangePassword.as_view(),
-        name='change_password'
-    ),
-    path('api-auth/', include('rest_framework.urls')),
+    url(r'^rest-auth/', include('rest_auth.urls')),
+    url(r'^accounts/', include('allauth.urls'), name='socialaccount_signup'),
+    url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
+    url(r'^rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
     path('', include(router.urls)),  # includes router generated URL
 ]

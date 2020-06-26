@@ -1,0 +1,19 @@
+site_name: {{ cookiecutter.project_name }}
+repo_name: {{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}
+repo_url: https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}
+site_dir: site
+copyright: Copyright &copy; {{ cookiecutter.company_name }}.
+dev_addr: 0.0.0.0:8001
+edit_uri: ''
+nav:
+  - Home: 'index.md'
+theme:
+  name: material
+  features:
+    - tabs
+  palette:
+    primary: indigo
+    accent: orange
+
+markdown_extensions:
+  - admonition

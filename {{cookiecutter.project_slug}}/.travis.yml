@@ -14,8 +14,9 @@ install:
   - pip install pycodestyle
 
 script:
-  - coverage run manage.py test
-  - pycodestyle --config=.pycodestylerc .
+ - docker-compose build
+ - docker-compose run web coverage run --source=. --omit=env/* manage.py test
+ - docker-compose run web pycodestyle --config=.pycodestylerc .
 
 after_success:
   coveralls

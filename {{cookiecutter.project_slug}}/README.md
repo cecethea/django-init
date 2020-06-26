@@ -1,22 +1,17 @@
 {% set is_open_source = cookiecutter.open_source_license != 'Not open source' -%}
 
-{% if is_open_source %}
-[![Build Status](https://travis-ci.org/{{ cookiecutter.github_username }}/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}.svg?branch=develop)](https://travis-ci.org/{{ cookiecutter.github_username }}/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }})
-{% else %}
-[![Build Status](https://travis-ci.com/{{ cookiecutter.github_username }}/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}.svg?branch=develop)](https://travis-ci.com/{{ cookiecutter.github_username }}/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }})
+{% if cookiecutter.use_travis_ci_org == "y" %}
+[![Build Status](https://travis-ci.org/github/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}.svg?branch=master)](https://travis-ci.org/{{ cookiecutter.github_username }}/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }})
+{% endif %}
+{% if cookiecutter.use_travis_ci_com == "y" %}
+[![Build Status](https://travis-ci.com/github/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}.svg?branch=master)](https://travis-ci.com/{{ cookiecutter.github_username }}/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }})
 {% endif %}
 
 {{ cookiecutter.project_short_description }}
 
-{% if is_open_source %}
- - Free software: {{ cookiecutter.open_source_license }}
- - Documentation: https://{{ cookiecutter.project_slug | replace("_", "-") }}.readthedocs.io.
-{% endif %}
-
 # {{ cookiecutter.project_name }}
 
 ### Table of Contents
-- [Issue manager](#issue-manager)
 - [Quickstart](#quickstart)
   * [Clone the project](#clone-the-project)
   * [Create a virtual environment](#create-a-virtual-environment)
@@ -26,10 +21,6 @@
   * [Test your changes](#test-your-changes)
 
 ---
-
-## Issue manager
-
-Issues are handled in this github repository.
 
 ## Quickstart
 

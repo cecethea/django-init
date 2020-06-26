@@ -10,6 +10,7 @@ from {{cookiecutter.project_slug}}.apps.user.managers import UserManager, Action
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
 from django.conf import settings
+from django.template.loader import render_to_string
 
 
 class User(AbstractUser):
@@ -25,10 +26,21 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+    @property
+    def display_name(self):
+        return f'{self.first_name} {self.last_name}' \
+            if self.first_name and self.last_name \
+            else self.email
+
     @staticmethod
     def create(email, password, validated_data):
+        print(email)
+        print(password)
+        print(validated_data)
         user, created = User.objects.get_or_create(
-            email=email, defaults=validated_data)
+            email=email,
+            defaults=validated_data
+        )
 
         # Hash the user's password
         user.set_password(password)
@@ -62,7 +74,7 @@ class User(AbstractUser):
                 "activation.html",
                 merge_data
             )
-            django_send_mail(
+            send_templated_email(
                 "Confirmation de la création de votre compte",
                 plain_msg,
                 settings.DEFAULT_FROM_EMAIL,
@@ -85,7 +97,7 @@ class User(AbstractUser):
             "reset_password.html",
             merge_data
         )
-        django_send_mail(
+        send_templated_email(
             "Reset password",
             plain_msg,
             settings.DEFAULT_FROM_EMAIL,
@@ -232,8 +244,8 @@ class ActionToken(models.Model):
             token.expire()
 
         # Get the token of the saved user and send it with an email
-        activate_token = ActionToken.objects.get(
-            user=self,
+        activate_token = ActionToken.objects.create(
+            user=user,
             type='password_change',
         )
 

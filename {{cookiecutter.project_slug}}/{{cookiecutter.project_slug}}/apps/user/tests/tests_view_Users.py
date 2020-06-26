@@ -12,416 +12,225 @@ from django.contrib.auth import get_user_model
 
 from {{cookiecutter.project_slug}}.factories import UserFactory, AdminFactory
 from ..models import ActionToken
+from ....testClasses import CustomAPITestCase
+
 
 User = get_user_model()
 
 
-class UsersTests(APITestCase):
+class UsersTests(CustomAPITestCase):
+
+    ATTRIBUTES = [
+        'is_staff',
+        'last_login',
+        'date_joined',
+        'groups',
+        'user_permissions',
+        'url',
+        'id',
+        'is_superuser',
+        'last_name',
+        'is_active',
+        'first_name',
+        'permissions',
+        'email'
+    ]
 
     def setUp(self):
         self.client = APIClient()
-
         self.user = UserFactory()
         self.user.set_password('Test123!')
         self.user.save()
 
-        self.admin = AdminFactory()
-        self.admin.set_password('Test123!')
-        self.admin.save()
-
-    def test_create_new_student_user(self):
-        """
-        Ensure we can create a new user if we have the permission.
-        """
-        data = {
-            'email': 'John@mailinator.com',
-            'password': 'test123!',
-            'phone': '1234567890',
-            'first_name': 'Chuck',
-            'last_name': 'Norris',
-        }
-
-        response = self.client.post(
-            reverse('user-list'),
-            data,
-            format='json',
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(json.loads(response.content)['phone'], '1234567890')
-
-        user = User.objects.get(email="John@mailinator.com")
-        activation_token = ActionToken.objects.filter(
-            user=user,
-            type='account_activation',
-        )
-
-        self.assertEqual(1, len(activation_token))
-
-    def test_create_new_user(self):
-        """
-        Ensure we can create a new user if we have the permission.
-        """
-        data = {
-            'email': 'John@mailinator.com',
-            'password': 'test123!',
-            'phone': '1234567890',
-            'first_name': 'Chuck',
-            'last_name': 'Norris',
-        }
-
-        response = self.client.post(
-            reverse('user-list'),
-            data,
-            format='json',
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(json.loads(response.content)['phone'], '1234567890')
-
-        user = User.objects.get(email="John@mailinator.com")
-        activation_token = ActionToken.objects.filter(
-            user=user,
-            type='account_activation',
-        )
-
-        self.assertEqual(1, len(activation_token))
-
-    def test_create_new_user_blank_fields(self):
-        """
-        Ensure we can't create a new user with blank fields
-        """
-        data = {
-            'email': '',
-            'password': '',
-            'phone': '',
-            'first_name': '',
-            'last_name': '',
-        }
-
-        response = self.client.post(
-            reverse('user-list'),
-            data,
-            format='json',
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        content = {
-            'first_name': ['This field may not be blank.'],
-            'last_name': ['This field may not be blank.'],
-            'email': ['This field may not be blank.'],
-            'password': ['This field may not be blank.'],
-            'phone': ['Invalid format.'],
-        }
-        self.assertEqual(json.loads(response.content), content)
-
-    def test_create_new_user_missing_fields(self):
-        """
-        Ensure we can't create a new user without required fields
-        """
-        data = {}
-
-        response = self.client.post(
-            reverse('user-list'),
-            data,
-            format='json',
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        content = {
-            'email': ['This field is required.'],
-            'password': ['This field is required.']
-        }
-        self.assertEqual(json.loads(response.content), content)
-
-    def test_create_new_user_weak_password(self):
-        """
-        Ensure we can't create a new user with a weak password
-        """
-        data = {
-            'email': 'John@mailinator.com',
-            'password': '19274682736',
-            'first_name': 'Chuck',
-            'last_name': 'Norris',
-        }
-
-        response = self.client.post(
-            reverse('user-list'),
-            data,
-            format='json',
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        content = {"password": ['This password is entirely numeric.']}
-        self.assertEqual(json.loads(response.content), content)
-
-    def test_create_new_user_invalid_phone(self):
-        """
-        Ensure we can't create a new user with an invalid phone number
-        """
-        data = {
-            'email': 'John@mailinator.com',
-            'password': '1fasd6dq#$%',
-            'phone': '12345',
-            'other_phone': '23445dfg',
-            'first_name': 'Chuck',
-            'last_name': 'Norris',
-        }
-
-        response = self.client.post(
-            reverse('user-list'),
-            data,
-            format='json',
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        content = {
-            "phone": ['Invalid format.'],
-            "other_phone": ['Invalid format.']
-        }
-        self.assertEqual(json.loads(response.content), content)
-
-    def test_create_new_user_duplicate_email(self):
-        """
-        Ensure we can't create a new user with an already existing email
-        """
-
-        data = {
-            'email': 'John@mailinator.com',
-            'password': 'test123!',
-            'phone': '1234567890',
-            'first_name': 'Chuck',
-            'last_name': 'Norris',
-        }
-
-        user = UserFactory()
-        user.email = data['email']
-        user.save()
-
-        response = self.client.post(
-            reverse('user-list'),
-            data,
-            format='json',
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        content = {
-            'email': [
-                "An account for the specified email address already exists."
-            ]
-        }
-        self.assertEqual(json.loads(response.content), content)
-
-    @override_settings(
-        LOCAL_SETTINGS={
-            "EMAIL_SERVICE": True,
-            "AUTO_ACTIVATE_USER": False,
-            "FRONTEND_INTEGRATION": {
-                "ACTIVATION_URL": "fake_url",
-            }
-        }
-    )
-    def test_create_user_activation_email(self):
-        """
-        Ensure that the activation email is sent when user signs up.
-        """
-
-        data = {
-            'email': 'John@mailinator.com',
-            'password': 'test123!',
-            'phone': '1234567890',
-            'first_name': 'Chuck',
-            'last_name': 'Norris',
-        }
-
-        response = self.client.post(
-            reverse('user-list'),
-            data,
-            format='json',
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(json.loads(response.content)['phone'], '1234567890')
-
-        user = User.objects.get(email="John@mailinator.com")
-        activation_token = ActionToken.objects.filter(
-            user=user,
-            type='account_activation',
-        )
-
-        self.assertFalse(user.is_active)
-        self.assertEqual(1, len(activation_token))
-
-    @override_settings(
-        LOCAL_SETTINGS={
-            "EMAIL_SERVICE": True,
-            "AUTO_ACTIVATE_USER": False,
-            "FRONTEND_INTEGRATION": {
-                "ACTIVATION_URL": "fake_url",
-            }
-        }
-    )
-    @mock.patch('{{cookiecutter.project_slug}}.services.EmailMessage.send',
-                return_value=0)
-    def test_create_user_activation_email_failure(self, send):
-        """
-        Ensure that the user is notified that no email was sent.
-        """
-
-        data = {
-            'email': 'John@mailinator.com',
-            'password': 'test123!',
-            'phone': '1234567890',
-            'first_name': 'Chuck',
-            'last_name': 'Norris',
-        }
-
-        response = self.client.post(
-            reverse('user-list'),
-            data,
-            format='json',
-        )
-
-        content = {
-            'detail': "The account was created but no email was "
-                      "sent. If your account is not activated, "
-                      "contact the administration.",
-        }
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(json.loads(response.content), content)
-
-        user = User.objects.get(email="John@mailinator.com")
-        activation_token = ActionToken.objects.filter(
-            user=user,
-            type='account_activation',
-        )
-
-        self.assertFalse(user.is_active)
-        self.assertEqual(1, len(activation_token))
-
-    @override_settings(
-        LOCAL_SETTINGS={
-            "EMAIL_SERVICE": True,
-            "AUTO_ACTIVATE_USER": True,
-            "FRONTEND_INTEGRATION": {
-                "ACTIVATION_URL": "fake_url",
-            }
-        }
-    )
-    @mock.patch('{{cookiecutter.project_slug}}.services.EmailMessage.send',
-                return_value=0)
-    def test_create_user_auto_activate(self, services):
-        """
-        Ensure that the user is automatically activated.
-        """
-
-        data = {
-            'email': 'John@mailinator.com',
-            'password': 'test123!',
-            'phone': '1234567890',
-            'first_name': 'Chuck',
-            'last_name': 'Norris',
-        }
-
-        response = self.client.post(
-            reverse('user-list'),
-            data,
-            format='json',
-        )
-
-        content = {
-            'detail': "The account was created but no email was "
-                      "sent. If your account is not activated, "
-                      "contact the administration.",
-        }
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(json.loads(response.content), content)
-
-        user = User.objects.get(email="John@mailinator.com")
-        activation_token = ActionToken.objects.filter(
-            user=user,
-            type='account_activation',
-        )
-
-        self.assertTrue(user.is_active)
-        self.assertEqual(1, len(activation_token))
-
-    def test_list_users(self):
-        """
-        Ensure we can list all users.
-        """
-        self.client.force_authenticate(user=self.admin)
-
-        response = self.client.get(reverse('user-list'))
-        self.assertEqual(json.loads(response.content)['count'], 2)
-
-        first_user = json.loads(response.content)['results'][0]
-        self.assertEqual(first_user['email'], self.user.email)
-
-        # Check the system doesn't return attributes not expected
-        attributes = [
-            'id',
-            'url',
-            'email',
-            'first_name',
-            'last_name',
-            'is_active',
-            'phone',
-            'other_phone',
-            'is_superuser',
-            'is_staff',
-            'last_login',
-            'date_joined',
-            'groups',
-            'user_permissions',
-            'picture'
-        ]
-        for key in first_user.keys():
-            self.assertTrue(
-                key in attributes,
-                'Attribute "{0}" is not expected but is '
-                'returned by the system.'.format(key)
-            )
-            attributes.remove(key)
-
-        # Ensure the system returns all expected attributes
-        self.assertTrue(
-            len(attributes) == 0,
-            'The system failed to return some '
-            'attributes : {0}'.format(attributes)
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_list_users_without_authenticate(self):
-        """
-        Ensure we can't list users without authentication.
-        """
-        response = self.client.get(reverse('user-list'))
-
-        content = {"detail": "Authentication credentials were not provided."}
-        self.assertEqual(json.loads(response.content), content)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_list_users_without_permissions(self):
-        """
-        Ensure we can't list users without permissions.
-        """
+    def test_profile(self):
         self.client.force_authenticate(user=self.user)
+        response = self.client.get(
+            'http://api.example.org/rest-auth/user/'
+        )
 
-        response = self.client.get(reverse('user-list'))
+        # HTTP code is good
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+            response.content
+        )
 
-        content = {
-            'detail': 'You do not have permission to perform this action.'
-        }
-        self.assertEqual(json.loads(response.content), content)
+        # Number of results is good
+        content = json.loads(response.content)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.check_attributes(content)
+        permissions = {}
+        self.assertEqual(
+            content['permissions'],
+            permissions
+        )
+
+    def test_register(self):
+        response = self.client.post(
+            'http://api.example.org/rest-auth/registration/',
+            {
+                'password1': 'test123!',
+                'password2': 'test123!',
+                'email': 'test@test.ca',
+            }
+        )
+
+        # HTTP code is good
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+            response.content
+        )
+
+        # Number of results is good
+        content = json.loads(response.content)
+
+        self.check_attributes(content, ['key'])
+
+    def test_login(self):
+        response = self.client.post(
+            'http://api.example.org/rest-auth/login/',
+            {
+                'email': self.user.email,
+                'password': 'Test123!',
+            }
+        )
+
+        # HTTP code is good
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+            response.content
+        )
+
+        # Number of results is good
+        content = json.loads(response.content)
+
+        self.check_attributes(content, ['key'])
+
+    def test_logout(self):
+        response = self.client.post(
+            'http://api.example.org/rest-auth/logout/',
+        )
+
+        # HTTP code is good
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+            response.content
+        )
+
+        # Number of results is good
+        content = json.loads(response.content)
+
+        self.assertEqual(
+            content,
+            {'detail': 'Successfully logged out.'}
+        )
+
+    def test_password_reset(self):
+        response = self.client.post(
+            'http://api.example.org/rest-auth/password/reset/',
+            {
+                'email': self.user.email
+            }
+        )
+
+        # HTTP code is good
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+            response.content
+        )
+
+        # Number of results is good
+        content = json.loads(response.content)
+
+        self.assertEqual(
+            content,
+            {'detail': 'Password reset e-mail has been sent.'}
+        )
+
+    def test_password_change(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            'http://api.example.org/rest-auth/password/change/',
+            {
+                'new_password1': 'Test1234!&',
+                'new_password2': 'Test1234!&',
+                'old_password': 'Test123!',
+            }
+        )
+
+        # HTTP code is good
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+            response.content
+        )
+
+        # Number of results is good
+        content = json.loads(response.content)
+
+        self.assertEqual(
+            content,
+            {'detail': 'New password has been saved.'}
+        )
+
+    def test_password_change_but_too_weak(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            'http://api.example.org/rest-auth/password/change/',
+            {
+                'new_password1': 'test',
+                'new_password2': 'test',
+                'old_password': 'Test123!',
+            }
+        )
+
+        # HTTP code is good
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+            response.content
+        )
+
+        # Number of results is good
+        content = json.loads(response.content)
+
+        self.assertEqual(
+            content,
+            {
+                "new_password2": [
+                    "This password is too short. It must contain "
+                    "at least 8 characters.",
+                    "This password is too common."
+                ]
+            }
+        )
+
+    def test_password_change_but_wrong_old_password(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            'http://api.example.org/rest-auth/password/change/',
+            {
+                'new_password1': 'Test123!',
+                'new_password2': 'Test123!',
+                'old_password': 'IForgotMyPassword',
+            }
+        )
+
+        # HTTP code is good
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+            response.content
+        )
+
+        # Number of results is good
+        content = json.loads(response.content)
+
+        self.assertEqual(
+            content,
+            {"old_password": ["Invalid password"]}
+        )

@@ -14,11 +14,11 @@ install:
  - pip install pycodestyle
 
 script:
- - printf 'FJNR\nGitUser\ntest1\n\n\n \n6\n' | cookiecutter .
- - cd test1
- - . env/bin/activate
- - coverage run --source=. --omit=env/* manage.py test
- - pycodestyle --config=.pycodestylerc ./ --exclude=./env/*,./test1/migrations/*
+ - cookiecutter .  --no-input
+ - cd project
+ - docker-compose build
+ - docker-compose run web coverage run --source=. --omit=env/* manage.py test
+ - docker-compose run web pycodestyle --config=.pycodestylerc .
 
 after_success:
  coveralls

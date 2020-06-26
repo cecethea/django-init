@@ -11,21 +11,23 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+from pathlib import Path
+from decouple import config, Csv
+from dj_database_url import parse as db_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+BASE_DIR = Path(__file__).absolute().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = ')xbn0sz8_y34m_q+=dt1izlkqenx@h$*xxv#b7dso%3y-dg1q1'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost', cast=Csv())
 
 
 # Application definition
@@ -37,12 +39,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_auth',
+    'allauth',
+    'allauth.account',
+    'rest_auth.registration',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',
     'corsheaders',
     '{{cookiecutter.project_slug}}',
     '{{cookiecutter.project_slug}}.apps.user',
+    '{{cookiecutter.project_slug}}.apps.notification',
     'anymail',
+    'simple_history',
+    'dry_rest_permissions',
 ]
 
 MIDDLEWARE = [
@@ -55,9 +67,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
 ROOT_URLCONF = '{{cookiecutter.project_slug}}.urls'
+
+SITE_ID = 1
 
 TEMPLATES = [
     {
@@ -82,15 +97,37 @@ WSGI_APPLICATION = '{{cookiecutter.project_slug}}.wsgi.application'
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    'default': config(
+        'DATABASE_URL',
+        default='sqlite:///' + str(BASE_DIR.joinpath('db.sqlite3')),
+        cast=db_url
+    )
 }
 
 # Custom user model
 
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
 AUTH_USER_MODEL = 'user.User'
+ACCOUNT_ADAPTER = '{{cookiecutter.project_slug}}'\
+                  '.apps.user.adapters.AccountAdapter'
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER':
+        '{{cookiecutter.project_slug}}'
+        '.apps.user.serializers.UserSerializer',
+    'PASSWORD_RESET_SERIALIZER':
+        '{{cookiecutter.project_slug}}'
+        '.apps.user.serializers.CustomPasswordResetSerializer',
+}
+REST_AUTH_REGISTER_SERIALIZERS = {
+    'REGISTER_SERIALIZER':
+        '{{cookiecutter.project_slug}}'
+        '.apps.user.serializers.CustomRegisterSerializer'
+}
+OLD_PASSWORD_FIELD_ENABLED = True
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
@@ -183,6 +220,9 @@ ACTIVATION_TOKENS = {
 ANYMAIL = {
     'SENDINBLUE_API_KEY': 'example_key',
     'REQUESTS_TIMEOUT': (30, 30),
+    'TEMPLATES': {
+        'RESET_PASSWORD': config('RESET_PASSWORD_EMAIL_TEMPLATE', 0),
+    }
 }
 EMAIL_BACKEND = 'anymail.backends.sendinblue.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@example.org'
@@ -191,12 +231,11 @@ DEFAULT_FROM_EMAIL = 'noreply@example.org'
 
 LOCAL_SETTINGS = {
     'ORGANIZATION': "{{cookiecutter.company_name}}",
-    "EMAIL_SERVICE": False,
-    "AUTO_ACTIVATE_USER": False,
-    "FRONTEND_INTEGRATION": {
-        "ACTIVATION_URL": "example.com/activate?activation_token="
-                          "{% raw %}{{token}}{% endraw %}",
-        "FORGOT_PASSWORD_URL": "example.com/forgot_password?token="
-                               "{% raw %}{{token}}{% endraw %}",
+    'CONTACT_EMAIL': "{{cookiecutter.contact_email}}",
+    'EMAIL_SERVICE': False,
+    'AUTO_ACTIVATE_USER': False,
+    'FRONTEND_URLS': {
+        'BASE_URL': 'http://localhost:4200/',
+        'RESET_PASSWORD': 'reset-password/{uid}/{token}',
     },
 }

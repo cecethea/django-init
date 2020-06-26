@@ -1,15 +1,9 @@
-{% set is_open_source = cookiecutter.open_source_license != 'Not open source' -%}
 
-{% if cookiecutter.use_travis_ci_org == "y" %}
-[![Build Status](https://travis-ci.org/github/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}.svg?branch=master)](https://travis-ci.org/{{ cookiecutter.github_username }}/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }})
-{% endif %}
-{% if cookiecutter.use_travis_ci_com == "y" %}
-[![Build Status](https://travis-ci.com/github/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}.svg?branch=master)](https://travis-ci.com/{{ cookiecutter.github_username }}/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }})
-{% endif %}
 
-{{ cookiecutter.project_short_description }}
 
-# {{ cookiecutter.project_name }}
+None
+
+# project
 
 ### Table of Contents
 - [Quickstart](#quickstart)
@@ -31,13 +25,13 @@ We're going to install and configure the latest develop build of this API.
 First of all, you need to clone the project on your computer with :
 
 ```
-git clone https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_hyphenated }}.git
+git clone https://github.com/None/project.git
 ```
 
 You can now move in the newly created folder:
 
 ```
-cd {{ cookiecutter.project_slug }}
+cd project
 ```
 
 ### Create a virtual environment

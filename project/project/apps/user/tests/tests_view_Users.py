@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.test.utils import override_settings
 from django.contrib.auth import get_user_model
 
-from {{cookiecutter.project_slug}}.factories import UserFactory, AdminFactory
+from project.factories import UserFactory, AdminFactory
 from ..models import ActionToken
 from ....testClasses import CustomAPITestCase
 

@@ -15,7 +15,7 @@ from dry_rest_permissions.generics import DRYGlobalPermissionsField
 from rest_auth.registration.serializers import RegisterSerializer
 from rest_auth.serializers import PasswordResetSerializer
 
-from {{cookiecutter.project_slug}}.apps.user.models import ActionToken
+from project.apps.user.models import ActionToken
 
 User = get_user_model()
 
@@ -67,7 +67,7 @@ class CustomPasswordResetSerializer(PasswordResetSerializer):
     def save(self):
 
         try:
-            from {{cookiecutter.project_slug}}.apps.notification.models import Notification
+            from project.apps.notification.models import Notification
             Notification.generate_reset_password(
                 User.objects.get(
                     email=self.validated_data.get('email')

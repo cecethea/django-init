@@ -18,7 +18,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from rest_framework.documentation import include_docs_urls
 from rest_framework.routers import DefaultRouter
-from {{cookiecutter.project_slug}}.apps.user.views import FacebookLogin
+from project.apps.user.views import FacebookLogin
 
 # External application routers
 # ie: from app.urls import router as app_router

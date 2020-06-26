@@ -6,7 +6,7 @@ from django.db import models
 
 from django.utils.translation import ugettext_lazy as _
 
-from {{cookiecutter.project_slug}}.apps.user.managers import UserManager, ActionTokenManager
+from project.apps.user.managers import UserManager, ActionTokenManager
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
 from django.conf import settings
@@ -258,7 +258,7 @@ class ActionToken(models.Model):
         ]
         # Setup the url for the activation button in the email
         activation_url = FRONTEND_SETTINGS['ACTIVATION_URL'].replace(
-            "{% raw %}{{token}}{% endraw %}",
+            "{{token}}",
             self.key
         )
 

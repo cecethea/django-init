@@ -19,7 +19,7 @@ from allauth.socialaccount.providers.facebook.views import (
 )
 from rest_auth.registration.views import SocialLoginView
 
-from {{cookiecutter.project_slug}} import permissions
+from project import permissions
 
 from .models import (
     TemporaryToken,

@@ -1,5 +1,6 @@
-"""The `urlpatterns` list routes URLs to views.
-For more information please see:
+"""project URL Configuration
+
+The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.0/topics/http/urls/
 Examples:
 Function views
@@ -15,15 +16,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf import settings
-from django.conf.urls import include, url
+from django.conf.urls import include
+from django.conf.urls.static import static
 from rest_framework.documentation import include_docs_urls
 from rest_framework.routers import DefaultRouter
-from {{cookiecutter.project_slug}}.apps.user.views import FacebookLogin
 
 # External application routers
 # ie: from app.urls import router as app_router
 
-from . import views
+
+from project.apps.user.urls import router as user_router
+from project.apps.user.urls import urlpatterns as user_urls
 
 
 class OptionalSlashDefaultRouter(DefaultRouter):
@@ -38,15 +41,20 @@ class OptionalSlashDefaultRouter(DefaultRouter):
 router = OptionalSlashDefaultRouter()
 
 # External workplace application
-# ie: router.registry.extend(app_router.registry)
-
-# Main application routes
-router.register('users', views.UserViewSet)
+router.registry.extend(user_router.registry)
 
 urlpatterns = [
-    url(r'^rest-auth/', include('rest_auth.urls')),
-    url(r'^accounts/', include('allauth.urls'), name='socialaccount_signup'),
-    url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
-    url(r'^rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
+    path(
+        'admin/', admin.site.urls
+    ),
+    path(
+        'docs/',
+        include_docs_urls(
+            title=settings.LOCAL_SETTINGS['ORGANIZATION'] + " API",
+            authentication_classes=[],
+            permission_classes=[],
+        )
+    ),
+    path('', include(user_urls)),
     path('', include(router.urls)),  # includes router generated URL
 ]

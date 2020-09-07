@@ -15,7 +15,7 @@ python-decouple==3.3
 django-storages==1.9.1
 dj_database_url==0.5.0
 zappa==0.51.0
-psycopg2-binary==2.8.5
+psycopg2-binary==2.8.6
 jsonfield==3.1.0
 django-model-utils==4.0.0
 
